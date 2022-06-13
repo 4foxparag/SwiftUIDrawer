@@ -2,8 +2,8 @@
 //  Slider2View.swift
 //  SwiftDrawer_Example
 //
-//  Created by Millman on 2019/7/2.
-//  Copyright © 2019 CocoaPods. All rights reserved.
+//  Created by Parag Patill on 10/06/22.
+//  Copyright © 2022 PTech. All rights reserved.
 //
 
 import SwiftUI
