@@ -73,7 +73,7 @@ struct MainContainer<Content: View> : View {
         }
         .offset(x:self.offset, y: 0)
         .shadow(radius: maxRadius)
-        .gesture(DragGesture().onChanged({ (value) in
+        .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .local).onChanged({ (value) in
             let will = self.offset + (value.translation.width-self.gestureCurrent)
             
             if self.leftStatus.type != .none{
