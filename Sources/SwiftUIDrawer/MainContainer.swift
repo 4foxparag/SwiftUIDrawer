@@ -77,25 +77,15 @@ struct MainContainer<Content: View> : View {
             let will = self.offset + (value.translation.width-self.gestureCurrent)
             
             if self.leftStatus.type != .none{
-                let range = 0...self.leftStatus.sliderWidth
-
-                if value.startLocation.x < CGFloat(100.0) && !drawerControl.isRightShowing
-                {
+                let leftRange = 0...self.leftStatus.sliderWidth
+                if value.startLocation.x < CGFloat(100.0) && !drawerControl.isRightShowing{
                     switch self.leftStatus.type{
                     case .leftRear:
-                        /*
-                        let range = 0...self.leftStatus.sliderWidth
-                        if range.contains(will){
-                            self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .moving(offset: will))
-                        }
-                        */
-                        
-                        self.updateOffsetBy(range: range, will: will, sliderStatus: self.leftStatus)
-                        
+                        self.updateSliderStatusBy(range: leftRange, will: will, sliderStatus: self.leftStatus)
                     case .leftFront:
                         let newTranslation = value.translation.width-self.leftStatus.sliderWidth
                         if newTranslation < 0{
-                            self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .moving(offset: newTranslation))
+                            self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .moving(offset: newTranslation))
                         }
                     default:
                         return
@@ -104,11 +94,11 @@ struct MainContainer<Content: View> : View {
                     if drawerControl.isLeftShowing{
                         switch self.leftStatus.type{
                         case .leftRear:
-                            self.updateOffsetBy(range: range, will: will, sliderStatus: self.leftStatus)
+                            self.updateSliderStatusBy(range: leftRange, will: will, sliderStatus: self.leftStatus)
                         case .leftFront:
-                            let newTranslation = value.translation.width-self.leftStatus.sliderWidth
+                            let newTranslation = value.translation.width
                             if newTranslation < 0{
-                                self.leftStatus.currentStatus = .moving(offset: newTranslation)
+                                self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .moving(offset: newTranslation))
                             }
                         default:
                             return
@@ -119,18 +109,15 @@ struct MainContainer<Content: View> : View {
             }
             
             if self.rightStatus.type != .none{
+                let rightRange = (-self.rightStatus.sliderWidth)...0
                 if value.startLocation.x > CGFloat(proxy.size.width-100.0) && !drawerControl.isLeftShowing{
-                    
                     switch self.rightStatus.type{
                     case .rightRear:
-                        let range = (-self.rightStatus.sliderWidth)...0
-                        if range.contains(will) {
-                            self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .moving(offset: will))
-                        }
+                        self.updateSliderStatusBy(range: rightRange, will: will, sliderStatus: self.rightStatus)
                     case .rightFront:
                         let newTranslation = value.translation.width+self.rightStatus.sliderWidth
                         if newTranslation > 0 {
-                            self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .moving(offset: newTranslation))
+                            self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .moving(offset: newTranslation))
                         }
                     default:
                         return
@@ -139,14 +126,11 @@ struct MainContainer<Content: View> : View {
                     if drawerControl.isRightShowing{
                         switch self.rightStatus.type{
                         case .rightRear:
-                            let range = (-self.rightStatus.sliderWidth)...0
-                            if range.contains(will) {
-                                self.rightStatus.currentStatus = .moving(offset: will)
-                            }
+                            self.updateSliderStatusBy(range: rightRange, will: will, sliderStatus: self.rightStatus)
                         case .rightFront:
-                            let newTranslation = value.translation.width+self.rightStatus.sliderWidth
+                            let newTranslation = value.translation.width
                             if newTranslation > 0 {
-                                self.rightStatus.currentStatus = .moving(offset: newTranslation)
+                                self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .moving(offset: newTranslation))
                             }
                         default:
                             return
@@ -155,44 +139,34 @@ struct MainContainer<Content: View> : View {
                     }
                 }
             }
+            
         }).onEnded({ (value) in
             let will = self.offset + (value.translation.width-self.gestureCurrent)
             
             if self.leftStatus.type != .none{
+                let leftRange = 0...self.leftStatus.sliderWidth
                 if value.startLocation.x < CGFloat(100.0) && !drawerControl.isRightShowing{
-                    let range = 0...self.leftStatus.sliderWidth
-                    switch self.leftStatus.type{
-                    case .leftRear:
-                        if will-range.lowerBound > range.upperBound-will{
-                            self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .show)
-                        }else{
-                            self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .hide)
-                        }
-                    case .leftFront:
-                        if will-range.lowerBound > range.upperBound-will{
-                            self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .show)
-                        }else{
-                            self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .hide)
-                        }
-                    default:
-                        return
+                    if will-leftRange.lowerBound > leftRange.upperBound-will{
+                        self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .show)
+                    }else{
+                        self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .hide)
                     }
                 }else{
                     if drawerControl.isLeftShowing{
-                        let range = 0...self.leftStatus.sliderWidth
-                        
                         switch self.leftStatus.type{
                         case .leftRear:
-                            if will-range.lowerBound > range.upperBound-will{
-                                self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .show)
+                            if will-leftRange.lowerBound > leftRange.upperBound-will{
+                                self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .show)
                             }else{
-                                self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .hide)
+                                self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .hide)
                             }
                         case .leftFront:
-                            if will-range.lowerBound > range.upperBound-will{
-                                self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .show)
+                            let sliderW = self.leftStatus.sliderWidth/3
+                            let newTranslation = value.translation.width
+                            if abs(newTranslation) > sliderW{
+                                self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .hide)
                             }else{
-                                self.drawerControl.updateSlider(type: self.leftStatus.type, showStatus: .hide)
+                                self.drawerControl.updateSliderStatus(type: self.leftStatus.type, showStatus: .show)
                             }
                         default:
                             return
@@ -201,45 +175,34 @@ struct MainContainer<Content: View> : View {
                 }
             }
             
-            if self.rightStatus.type != .none,
-               value.startLocation.x > CGFloat(proxy.size.width-100.0) && !drawerControl.isLeftShowing{
-                let range = (-self.rightStatus.sliderWidth)...0
-                switch self.rightStatus.type{
-                case .rightRear:
-                    if will-range.lowerBound < range.upperBound-will
-                    {
-                        self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .show)
+            if self.rightStatus.type != .none{
+                let rightRange = (-self.rightStatus.sliderWidth)...0
+                if value.startLocation.x > CGFloat(proxy.size.width-100.0) && !drawerControl.isLeftShowing{
+                    if will-rightRange.lowerBound < rightRange.upperBound-will{
+                        self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .show)
                     }else{
-                        self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .hide)
+                        self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .hide)
                     }
-                case .rightFront:
-                    if will-range.lowerBound < range.upperBound-will {
-                        self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .show)
-                    }else{
-                        self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .hide)
-                    }
-                default:
-                    return
-                }
-            }else{
-                if drawerControl.isRightShowing{
-                    let range = (-self.rightStatus.sliderWidth)...0
-                    switch self.rightStatus.type{
-                    case .rightRear:
-                        if will-range.lowerBound < range.upperBound-will
-                        {
-                            self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .show)
-                        }else{
-                            self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .hide)
+                }else{
+                    if drawerControl.isRightShowing{
+                        switch self.rightStatus.type{
+                        case .rightRear:
+                            if will-rightRange.lowerBound < rightRange.upperBound-will{
+                                self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .show)
+                            }else{
+                                self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .hide)
+                            }
+                        case .rightFront:
+                            let sliderW = self.leftStatus.sliderWidth/3
+                            let newTranslation = value.translation.width
+                            if abs(newTranslation) > sliderW{
+                                self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .hide)
+                            }else{
+                                self.drawerControl.updateSliderStatus(type: self.rightStatus.type, showStatus: .show)
+                            }
+                        default:
+                            return
                         }
-                    case .rightFront:
-                        if will-range.lowerBound < range.upperBound-will {
-                            self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .show)
-                        }else{
-                            self.drawerControl.updateSlider(type: self.rightStatus.type, showStatus: .hide)
-                        }
-                    default:
-                        return
                     }
                 }
             }
@@ -247,9 +210,9 @@ struct MainContainer<Content: View> : View {
         }))
     }
     
-    func updateOffsetBy(range: ClosedRange<CGFloat>, will: CGFloat, sliderStatus: SliderStatus){
+    func updateSliderStatusBy(range: ClosedRange<CGFloat>, will: CGFloat, sliderStatus: SliderStatus){
         if range.contains(will){
-            self.drawerControl.updateSlider(type: sliderStatus.type, showStatus: .moving(offset: will))
+            self.drawerControl.updateSliderStatus(type: sliderStatus.type, showStatus: .moving(offset: will))
         }
     }
     

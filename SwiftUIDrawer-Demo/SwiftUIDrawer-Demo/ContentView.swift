@@ -12,7 +12,7 @@ struct ContentView: View {
     var body: some View {
         Drawer()
             .setSlider(view: SliderView(type: .leftFront))
-            .setSlider(view: Slider2View(type: .rightFront))
+            .setSlider(view: SliderView(type: .rightFront))
             .setMain(view: HomeView())
     }
 }

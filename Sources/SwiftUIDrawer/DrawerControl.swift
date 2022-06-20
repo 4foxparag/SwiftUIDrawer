@@ -97,28 +97,11 @@ public class DrawerControl: ObservableObject {
     }
     
     public func show(type: SliderType, isShow: Bool) {
-        
         let haveMoving = self.status.first { $0.value.currentStatus.isMoving } != nil
         if haveMoving {
             return
         }
-        
-        /*
-        switch type {
-        case .leftRear, .leftFront:
-            self.isLeftShowing = isShow
-            self.isRightShowing = false
-        case .rightRear, .rightFront:
-            self.isLeftShowing = false
-            self.isRightShowing = isShow
-        case .none:
-            self.isLeftShowing = false
-            self.isRightShowing = false
-        }
-        self.status[type]?.currentStatus = isShow ? .show: .hide
-        */
-        
-        self.updateSlider(type: type, showStatus: isShow ? .show: .hide)
+        self.updateSliderStatus(type: type, showStatus: isShow ? .show: .hide)
     }
     
     public func hideAllSlider() {
@@ -129,7 +112,7 @@ public class DrawerControl: ObservableObject {
         self.isRightShowing = false
     }
     
-    func updateSlider(type:SliderType, showStatus:ShowStatus)
+    func updateSliderStatus(type:SliderType, showStatus:ShowStatus)
     {
         switch type {
         case .leftRear, .leftFront:

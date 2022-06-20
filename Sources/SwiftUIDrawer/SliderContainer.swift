@@ -13,6 +13,9 @@ import Combine
 struct SliderContainer<Content: SliderViewProtocol> : View {
     @ObservedObject public var control: DrawerControl
     @ObservedObject private var status: SliderStatus
+    @GestureState private var isDragging: Bool = false
+    @State var gestureState: GestureStatus = .idle
+    @State var sliderOffsSet: CGFloat = 0.0
     
     let slider: AnyView
     let type: SliderType
@@ -26,7 +29,6 @@ struct SliderContainer<Content: SliderViewProtocol> : View {
         let parentSize = proxy.size
         self.status.parentSize = parentSize
         
-        
         switch self.status.type {
         case .leftFront,  .rightFront:
             let view = ZStack {
@@ -39,54 +41,46 @@ struct SliderContainer<Content: SliderViewProtocol> : View {
             }
                 .shadow(radius: self.status.showRate > 0 ? self.status.shadowRadius : 0)
                 .offset(x: self.status.sliderOffset() , y: 0)
-                .gesture(DragGesture().onChanged({ (value) in
+                .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .global).updating($isDragging) { _, isDragging, _ in
+                    isDragging = true
+                }.onChanged({ (value) in
+                    guard gestureState == .started || gestureState == .active else { return }
                     if self.status.type.isLeft && value.translation.width < 0 {
                         self.status.currentStatus = .moving(offset: value.translation.width)
                     } else if !self.status.type.isLeft && value.translation.width > 0 {
                         self.status.currentStatus = .moving(offset: value.translation.width)
                     }
                 }).onEnded({ (value) in
-
                     if self.status.type.isLeft {
                         let sliderW = self.status.sliderWidth/2
-
                         if value.location.x < sliderW{
-                            control.isLeftShowing = false
-                            control.isRightShowing = false
-                            self.status.currentStatus = .hide
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .hide)
                         }else{
-                            control.isLeftShowing = true
-                            control.isRightShowing = false
-                            self.status.currentStatus = .show
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .show)
                         }
                     } else {
-                        /*
-                        let sliderW = self.status.sliderWidth/2
-                        if value.location.x > sliderW{
-                            control.isRightShowing = false
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .hide
-                        }else{
-                            control.isRightShowing = true
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .show
-                        }
-                        */
                         let sliderW = self.status.sliderWidth/3
-
                         let offSet = value.translation.width-sliderW
                         if offSet >= 0{
-                            control.isRightShowing = false
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .hide
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .hide)
                         }else{
-                            control.isRightShowing = true
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .show
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .show)
                         }
                     }
+                    gestureState = .ended
                 }))
-            //.animation(.default, value: self.status.sliderOffset())
+                .onChange(of: gestureState) { state in
+                    guard state == .started else { return }
+                    gestureState = .active
+                }
+                .onChange(of: isDragging) { value in
+                    if value, gestureState != .started {
+                        gestureState = .started
+                    } else if !value, gestureState != .ended {
+                        gestureState = .cancelled
+                        print("cancelled")
+                    }
+                }
             return AnyView.init(view)
         case .leftRear, .rightRear:
             let view = ZStack {
@@ -99,7 +93,10 @@ struct SliderContainer<Content: SliderViewProtocol> : View {
             }
                 .offset(x: self.status.type.isLeft ? 0 : parentSize.width-self.status.sliderWidth, y: 0)
                 .frame(maxWidth: self.status.sliderWidth)
-                .gesture(DragGesture().onChanged({ (value) in
+                .gesture(DragGesture(minimumDistance: 30, coordinateSpace: .global).updating($isDragging) { _, isDragging, _ in
+                    isDragging = true
+                }.onChanged({ (value) in
+                    guard gestureState == .started || gestureState == .active else { return }
                     
                     if self.status.type.isLeft && value.translation.width < 0 {
                         let offSet  = self.status.sliderWidth+value.translation.width
@@ -109,94 +106,40 @@ struct SliderContainer<Content: SliderViewProtocol> : View {
                         self.status.currentStatus = .moving(offset: offSet)
                     }
                 }).onEnded({ (value) in
+                    gestureState = .ended
+                    
                     let sliderW = self.status.sliderWidth/3
                     if self.status.type.isLeft {
                         let offSet = value.translation.width+sliderW
                         if offSet <= 0{
-                            control.isLeftShowing = false
-                            control.isRightShowing = false
-                            self.status.currentStatus = .hide
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .hide)
                         }else{
-                            control.isLeftShowing = true
-                            control.isRightShowing = false
-                            self.status.currentStatus = .show
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .show)
                         }
                     } else if !self.status.type.isLeft {
                         let offSet = value.translation.width-sliderW
                         if offSet >= 0{
-                            control.isRightShowing = false
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .hide
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .hide)
                         }else{
-                            control.isRightShowing = true
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .show
+                            self.control.updateSliderStatus(type: self.status.type, showStatus: .show)
                         }
                     }
                 }))
-            return AnyView(view)
-        case .none:
-            return AnyView(EmptyView())
-        }
-        
-        /*
-        switch self.status.type {
-        case .leftFront,  .rightFront:
-            let view = ZStack {
-                AnyView(Color.white).frame(maxWidth:
-                    self.status.sliderWidth)
-                .padding(EdgeInsets(top: -proxy.safeAreaInsets.top, leading: 0, bottom: -proxy.safeAreaInsets.bottom, trailing: 0))
-                self.slider
-                    .frame(maxWidth:
-                        self.status.sliderWidth)
+                .onChange(of: gestureState) { state in
+                    guard state == .started else { return }
+                    gestureState = .active
                 }
-                .shadow(radius: self.status.showRate > 0 ? self.status.shadowRadius : 0)
-                .offset(x: self.status.sliderOffset() , y: 0)
-                .gesture(DragGesture().onChanged({ (value) in
-                    if self.status.type.isLeft && value.translation.width < 0 {
-                        self.status.currentStatus = .moving(offset: value.translation.width)
-                    } else if !self.status.type.isLeft && value.translation.width > 0 {
-                        self.status.currentStatus = .moving(offset: value.translation.width)
+                .onChange(of: isDragging) { value in
+                    if value, gestureState != .started {
+                        gestureState = .started
+                    } else if !value, gestureState != .ended {
+                        gestureState = .cancelled
                     }
-                }).onEnded({ (value) in
-                    if self.status.type.isLeft {
-                        let sliderW = self.status.sliderWidth/2
-                        
-                        if value.location.x < sliderW{
-                            control.isLeftShowing = false
-                            control.isRightShowing = false
-                            self.status.currentStatus = .hide
-                        }else{
-                            control.isLeftShowing = true
-                            control.isRightShowing = false
-                            self.status.currentStatus = .show
-                        }
-                    } else {
-                        
-                        let sliderW = self.status.sliderWidth/2
-                                              
-                        if value.location.x > sliderW{
-                            control.isRightShowing = false
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .hide
-                        }else{
-                            control.isRightShowing = true
-                            control.isLeftShowing = false
-                            self.status.currentStatus =  .show
-                        }
-                    }
-                }))
-                //.animation(.default, value: self.status.sliderOffset())
-            return AnyView.init(view)
-        case .leftRear, .rightRear:
-            let view = self.slider
-                .offset(x: self.status.type.isLeft ? 0 : parentSize.width-self.status.sliderWidth, y: 0)
-                .frame(maxWidth: self.status.sliderWidth)
+                }
             return AnyView(view)
         case .none:
             return AnyView(EmptyView())
         }
-        */
     }
     
     init(content: Content, drawerControl: DrawerControl) {
@@ -221,3 +164,11 @@ struct SliderContainer_Previews : PreviewProvider {
     }
 }
 #endif
+
+enum GestureStatus: Equatable {
+    case idle
+    case started
+    case active
+    case ended
+    case cancelled
+}

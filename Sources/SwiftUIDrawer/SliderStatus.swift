@@ -39,14 +39,14 @@ public class SliderStatus: ObservableObject {
             case .show:
                 self.showRate = 1
             case .moving(let offset):
-                let width = parentSize.width/2
+                let width = parentSize.width///2
                 if self.type.isLeft {
                     showRate = self.type.isRear ? 1-(width-offset)/width : (width+offset)/width
                 } else {
                     showRate = (width-offset)/width
                 }
             }
-                withAnimation(.linear(duration: 0.3)) { objectDidChange.send(self) }
+            withAnimation(.linear(duration: 0.3)) { objectDidChange.send(self) }
             //objectDidChange.send(self)
         }
     }
