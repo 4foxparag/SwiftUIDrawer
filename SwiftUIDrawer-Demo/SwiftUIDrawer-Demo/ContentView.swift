@@ -11,8 +11,7 @@ import SwiftUIDrawer
 struct ContentView: View {
     var body: some View {
         Drawer()
-            .setSlider(view: SliderView(type: .leftFront))
-            .setSlider(view: SliderView(type: .rightFront))
+            .setSlider(view: SliderView(type: .leftFront), shadowRadius: 0)
             .setMain(view: HomeView())
     }
 }
